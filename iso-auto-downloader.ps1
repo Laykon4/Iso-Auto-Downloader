@@ -1,15 +1,16 @@
 Clear-Host
-#Demander à l'utilisateur de faire un choix
+$stamp = (Get-Date).toString("yyyy-MM-dd -- HH.mm.ss")
+$logfilepath="F:\ScriptISO\report_$stamp.log"
+$logmessage= "###### DEBUT DU SCRIPT ######" 
+
 $choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux)"
 
-# Utiliser le switch pour déterminer le choix
 $osType = switch ($choice) {
     "1" { "Debian" }
     "2" { "Kali Linux" }
     Default { "Unknown" }
 }
 
-# Utiliser le résultat du switch dans une condition
 if ($osType -eq "Debian") {
 
     $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
@@ -20,18 +21,15 @@ if ($osType -eq "Debian") {
     $response = Invoke-WebRequest -Uri $debianUrl
     $pageContent = $response.Content
 
-    # Extrait + match du pattern compare au contenu du site
     $isoFile = [regex]::Match($pageContent, $debianIsoPattern).Value
 
     if ($isoFile) {
         $latestIsoUrl = "$debianUrl$isoFile"
         $localPath = "$debianLocalPath$isoFile"
 
-        # Vérifie si le fichier existe
         if (Test-Path -Path $localPath) {
             $localLastModified = (Get-Item -Path $localPath).LastWriteTime
 
-            # Compare les dates
             $remoteLastModified = $response.Headers["Last-Modified"]
             $remoteLastModifiedDate = [DateTime]::ParseExact($remoteLastModified, "R", $null)
 
@@ -43,7 +41,6 @@ if ($osType -eq "Debian") {
                 $logmessage= "Le fichier ISO est déjà à jour."
             }
         }else {
-            # dl si le fichier local n'existe pas
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             $logmessage= "Le fichier ISO n'existait pas localement et a été téléchargé : $isoFile"
         }
@@ -72,18 +69,15 @@ elseif ($osType -eq "Kali Linux") {
     $response = Invoke-WebRequest -Uri $kaliUrl
     $pageContent = $response.Content
 
-    # Extrait + match du pattern compare au contenu du site
     $isoFile = [regex]::Match($pageContent, $kaliIsoPattern).Value
 
     if ($isoFile) {
         $latestIsoUrl = "$kaliUrl$isoFile"
         $localPath = "$kaliLocalPath$isoFile"
 
-        # Vérifie si le fichier existe
         if (Test-Path -Path $localPath) {
             $localLastModified = (Get-Item -Path $localPath).LastWriteTime
 
-            # Compare les dates
             $remoteLastModified = $response.Headers["Last-Modified"]
 
             if ($remoteLastModifiedDate -gt $localLastModified) {
@@ -94,7 +88,6 @@ elseif ($osType -eq "Kali Linux") {
                 $logmessage= "Le fichier ISO est déjà à jour."
             }
         }else {
-            # dl si le fichier local n'existe pas
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             $logmessage= "Le fichier ISO n'existait pas localement et a été téléchargé : $isoFile"
         }
