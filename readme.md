@@ -57,12 +57,6 @@ To set up automatic downloads:
 
     ___Not tested yet with cron___
 
-## Troubleshooting
-
-- **404 Error**: Verify that the URL and ISO pattern are correct and that the file exists.
-- **Permission Denied**: Ensure that the script has write access to the local save path.
-- **No Download Detected**: Confirm that the remote URL structure has not changed, or adjust `$isoPattern` as necessary.
-
 
 ## License
 
