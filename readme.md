@@ -27,8 +27,9 @@ ISO Auto-Downloader is a tool designed to automate the process of fetching the l
     cd iso-auto-downloader
     ```
 
+2. Open the PowerShell script in a text editor to configure your preferred download URLs and local save paths.
 
-2. Optional: Set up the script in Task Scheduler (Windows) for periodic checks.
+3. Optional: Set up the script in Task Scheduler (Windows) for periodic checks.
 
 ### Usage
 
@@ -56,12 +57,6 @@ To set up automatic downloads:
 4. Save and start the task to ensure it runs correctly.
 
     ___Not tested yet with cron___
-
-## Troubleshooting
-
-- **404 Error**: Verify that the URL and ISO pattern are correct and that the file exists.
-- **Permission Denied**: Ensure that the script has write access to the local save path.
-- **No Download Detected**: Confirm that the remote URL structure has not changed, or adjust `$isoPattern` as necessary.
 
 
 ## License
