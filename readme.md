@@ -1,6 +1,6 @@
 # ISO Auto-Downloader
 
-### Automate the Download of Latest ISO Files (Debian only for now)
+### Automate the Download of Latest ISO Files (Debian & Kali Linux only for now)
 
 ISO Auto-Downloader is a tool designed to automate the process of fetching the latest versions of ISO files from specified sources. The tool checks for new releases, compares with locally stored files, and downloads updates only when a new version is available. This is ideal for users who need the most recent ISO versions without manually checking for updates.
 
@@ -9,7 +9,6 @@ ISO Auto-Downloader is a tool designed to automate the process of fetching the l
 - **Automated Version Check**: Detects the latest ISO version available from the specified URL.
 - **Smart Downloading**: Downloads only when a new ISO version is available, saving bandwidth and storage.
 - **Easy Scheduling**: Integrates with task schedulers (like Windows Task Scheduler or CRON) to run periodically.
-- **Customizable Sources**: Works with any website or file repository that follows a predictable URL structure. **(Not yet implemented, coming in the future)**
   
 ## Getting Started
 
@@ -28,9 +27,8 @@ ISO Auto-Downloader is a tool designed to automate the process of fetching the l
     cd iso-auto-downloader
     ```
 
-2. Open the PowerShell script in a text editor to configure your preferred download URLs and local save paths.
 
-3. Optional: Set up the script in Task Scheduler (Windows) for periodic checks.
+2. Optional: Set up the script in Task Scheduler (Windows) for periodic checks.
 
 ### Usage
 
@@ -45,23 +43,6 @@ ISO Auto-Downloader is a tool designed to automate the process of fetching the l
    - Retrieve the latest ISO filename based on specified patterns.
    - Compare the latest remote version with any locally stored versions.
    - Download the new ISO file if an update is available.
-
-### Configuration
-
-Edit the following variables in the script as needed:
-- `$debianUrl`: URL of the ISO file directory.
-- `$localPath`: Directory path where downloaded ISOs will be stored.
-- `$isoPattern`: Regular expression pattern for identifying ISO files in the directory.
-
-### Example
-
-An example configuration might look like this:
-
-```powershell
-$debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
-$localPath = "C:\ISO\debian-latest.iso"
-$isoPattern = "debian-[\d.]+-amd64-netinst\.iso"
-```
 
 ## Scheduling Automatic Downloads
 
@@ -82,9 +63,6 @@ To set up automatic downloads:
 - **Permission Denied**: Ensure that the script has write access to the local save path.
 - **No Download Detected**: Confirm that the remote URL structure has not changed, or adjust `$isoPattern` as necessary.
 
-## Contributing
-
-Feel free to contribute by submitting issues or pull requests! Collaboration is welcome to improve URL handling, add support for more ISO sources, or streamline configuration.
 
 ## License
 
