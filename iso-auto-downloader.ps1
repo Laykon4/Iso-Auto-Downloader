@@ -1,68 +1,114 @@
 Clear-Host
-Write-Host "Welcome to the ISO automatic downloader "
-Write-Host " 1 - Debian"
-Write-Host " 2 - Kali Linux"
-[Int] $osChoice = Read-Host "From which OS do you want to download the iso ?"
+#Demander à l'utilisateur de faire un choix
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux)"
 
-switch ($osChoice) {
-    1 {
-        $localOsPath = "F:\ScriptISO\debian\"
-        $isoPattern = "debian-[\d.]+-amd64-netinst\.iso"
-        $downloadUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
-    }
-
-    2 {
-        Clear-Host
-        [Int] $installType = Read-Host "Netinst or Complete install ? (1 for netinst | 2 for complete) ?"
-        switch ($installType) {
-            1 {$isoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
-            2 {$isoPattern = "kali-linux-[\d.]+-installer-amd64\.iso"}
-        }
-        $localOsPath = "F:\ScriptISO\kali\"
-        $downloadUrl = "https://cdimage.kali.org/current/"
-    }
-
-    Default {
-        Write-Host "Invalid choice."
-        exit
-    }
+# Utiliser le switch pour déterminer le choix
+$osType = switch ($choice) {
+    "1" { "Debian" }
+    "2" { "Kali Linux" }
+    Default { "Unknown" }
 }
 
+# Utiliser le résultat du switch dans une condition
+if ($osType -eq "Debian") {
 
+    $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
+    $debianIsoPattern = "debian-[\d.]+-amd64-netinst\.iso"
+    $debianLocalPath = "F:\ScriptISO\debian\"
 
-# contenu du repertoire
-$response = Invoke-WebRequest -Uri $downloadUrl
-$pageContent = $response.Content
+    Write-Host "You selected Debian. Proceeding with Debian setup..."
+    $response = Invoke-WebRequest -Uri $debianUrl
+    $pageContent = $response.Content
 
-# Extrait + match du pattern compare au contenu du site
-$isoFile = [regex]::Match($pageContent, $isoPattern).Value
+    # Extrait + match du pattern compare au contenu du site
+    $isoFile = [regex]::Match($pageContent, $debianIsoPattern).Value
 
-if ($isoFile) {
-    $latestIsoUrl = "$downloadUrl$isoFile"
-    $localPath = "$localOsPath$isoFile"
+    if ($isoFile) {
+        $latestIsoUrl = "$debianUrl$isoFile"
+        $localPath = "$debianLocalPath$isoFile"
 
-    # Vérifie si le fichier existe
-    if (Test-Path -Path $localPath) {
-        $localLastModified = (Get-Item -Path $localPath).LastWriteTime
+        # Vérifie si le fichier existe
+        if (Test-Path -Path $localPath) {
+            $localLastModified = (Get-Item -Path $localPath).LastWriteTime
 
-        # Compare les dates
-        $remoteLastModified = $response.Headers["Last-Modified"]
-        $remoteLastModifiedDate = [DateTime]::ParseExact($remoteLastModified, "R", $null)
+            # Compare les dates
+            $remoteLastModified = $response.Headers["Last-Modified"]
+            $remoteLastModifiedDate = [DateTime]::ParseExact($remoteLastModified, "R", $null)
 
-        if ($remoteLastModifiedDate -gt $localLastModified) {
+            if ($remoteLastModifiedDate -gt $localLastModified) {
+                Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            
+                $logmessage= "Le fichier ISO a été mis à jour et téléchargé : $isoFile"
+            } else {
+                $logmessage= "Le fichier ISO est déjà à jour."
+            }
+        }else {
+            # dl si le fichier local n'existe pas
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-        
-            Write-Output "The ISO file has been updated and downloaded : $isoFile"
-        } else {
-            Write-Output "The ISO file is already up to date."
+            $logmessage= "Le fichier ISO n'existait pas localement et a été téléchargé : $isoFile"
         }
-    }else {
-        # dl si le fichier local n'existe pas
-        Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-        Write-Output "The ISO file did not exist locally and was downloaded : $isoFile"
+
+
+    } else {
+        $logmessage= "Aucun fichier ISO trouvé dans le répertoire."
+}
+
+
+
+} 
+
+elseif ($osType -eq "Kali Linux") {
+
+    [Int] $version = Read-Host "Choose a version for Kali Linux (1 for Netinst | 2 for Complete)"
+    switch ($version) {
+        1 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
+        2 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-amd64\.iso"}
     }
 
+    $kaliUrl = "https://cdimage.kali.org/current/"
+    $kaliLocalPath = "F:\ScriptISO\kali\"
 
-} else {
-    Write-Output "no file found in this directory"
+    Write-Host "You selected Kali Linux. Proceeding with Kali Linux setup..."
+    $response = Invoke-WebRequest -Uri $kaliUrl
+    $pageContent = $response.Content
+
+    # Extrait + match du pattern compare au contenu du site
+    $isoFile = [regex]::Match($pageContent, $kaliIsoPattern).Value
+
+    if ($isoFile) {
+        $latestIsoUrl = "$kaliUrl$isoFile"
+        $localPath = "$kaliLocalPath$isoFile"
+
+        # Vérifie si le fichier existe
+        if (Test-Path -Path $localPath) {
+            $localLastModified = (Get-Item -Path $localPath).LastWriteTime
+
+            # Compare les dates
+            $remoteLastModified = $response.Headers["Last-Modified"]
+
+            if ($remoteLastModifiedDate -gt $localLastModified) {
+                Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            
+                $logmessage= "Le fichier ISO a été mis à jour et téléchargé : $isoFile"
+            } else {
+                $logmessage= "Le fichier ISO est déjà à jour."
+            }
+        }else {
+            # dl si le fichier local n'existe pas
+            Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            $logmessage= "Le fichier ISO n'existait pas localement et a été téléchargé : $isoFile"
+        }
+
+
+    } else {
+        $logmessage= "Aucun fichier ISO trouvé dans le répertoire."
 }
+
+} 
+
+else {
+    Write-Host "Invalid choice. Please select a valid option."
+}
+
+
+$stamp + " : " + $logmessage >> $logfilepath
