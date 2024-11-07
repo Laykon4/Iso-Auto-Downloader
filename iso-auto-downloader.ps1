@@ -6,7 +6,7 @@ Write-Host " 2 - Kali Linux"
 
 switch ($osChoice) {
     1 {
-        $localOsPath = "F:\ScriptISO\debian\"
+        $localOsPath = "your_debian_folder\"
         $isoPattern = "debian-[\d.]+-amd64-netinst\.iso"
         $downloadUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
     }
@@ -18,7 +18,7 @@ switch ($osChoice) {
             1 {$isoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
             2 {$isoPattern = "kali-linux-[\d.]+-installer-amd64\.iso"}
         }
-        $localOsPath = "F:\ScriptISO\kali\"
+        $localOsPath = "your_kali_folder\"
         $downloadUrl = "https://cdimage.kali.org/current/"
     }
 
