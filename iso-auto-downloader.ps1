@@ -3,7 +3,7 @@ $stamp = (Get-Date).toString("yyyy-MM-dd -- HH.mm.ss")
 $logfilepath="F:\ScriptISO\report_$stamp.log"
 $logmessage= "###### DEBUT DU SCRIPT ######" 
 
-$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux)"
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux"
 
 $osType = switch ($choice) {
     "1" { "Debian" }
