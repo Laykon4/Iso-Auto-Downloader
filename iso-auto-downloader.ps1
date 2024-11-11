@@ -3,11 +3,12 @@ $stamp = (Get-Date).toString("yyyy-MM-dd -- HH.mm.ss")
 $logfilepath="F:\ScriptISO\report_$stamp.log"
 $logmessage= "###### DEBUT DU SCRIPT ######" 
 
-$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n Your choice "
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n Your choice "
 
 $osType = switch ($choice) {
     "1" { "Debian" }
     "2" { "Kali Linux" }
+    "3" { "Ubuntu" }
     Default { "Unknown" }
 }
 
@@ -80,7 +81,7 @@ elseif ($osType -eq "Kali Linux") {
 
             $remoteLastModified = $response.Headers["Last-Modified"]
 
-            if ($remoteLastModifiedDate -gt $localLastModified) {
+            if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
                 $logmessage= "The new iso file was downloaded : $isoFile"
@@ -97,6 +98,48 @@ elseif ($osType -eq "Kali Linux") {
         $logmessage= "No ISO files found in the directory."
 }
 
+}
+
+elseif ($osType -eq "Ubuntu") {
+
+    $ubuntuUrl = "https://releases.ubuntu.com/"
+
+    $response = Invoke-WebRequest -Uri $ubuntuUrl
+    $pageContent = $response.Content
+
+    $ubuntuPattern = "(?<=href=[""'])(\d{2}\.\d{2})(?=[""'/])"
+    $isoFile = [regex]::Matches($pageContent, $ubuntuPattern) | ForEach-Object { $_.Value }
+
+    $latestVersion = ($isoFile | Sort-Object -Descending)[0]
+
+    $latestIsoUrl = "$ubuntuUrl$latestVersion/ubuntu-$latestVersion-desktop-amd64.iso"
+    $ubuntuLocalPath = "F:\ScriptISO\ubuntu"
+
+
+    if ($latestVersion) {
+        $localPath = "$ubuntuLocalPath\ubuntu-$latestVersion-desktop-amd64.iso"
+
+        if (Test-Path -Path $localPath) {
+            $localLastModified = (Get-Item -Path $localPath).LastWriteTime
+
+            $remoteLastModified = $response.Headers["Last-Modified"]
+
+            if ($remoteLastModified -gt $localLastModified) {
+                Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            
+                $logmessage= "The new iso file was downloaded : $latestIsoUrl"
+            } else {
+                $logmessage= "The iso file is already up to date."
+            }
+        } else {
+            Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            $logmessage= "The ISO file did not exist locally and was downloaded : $latestIsoUrl"
+        }
+    } 
+
+    else {
+        $logmessage= "No ISO files found in the directory."
+    }
 }
 
 else {
