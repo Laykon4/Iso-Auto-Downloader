@@ -3,7 +3,7 @@ $stamp = (Get-Date).toString("yyyy-MM-dd -- HH.mm.ss")
 $logfilepath="F:\ScriptISO\report_$stamp.log"
 $logmessage= "###### DEBUT DU SCRIPT ######" 
 
-$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux"
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n Your choice "
 
 $osType = switch ($choice) {
     "1" { "Debian" }
@@ -36,18 +36,18 @@ if ($osType -eq "Debian") {
             if ($remoteLastModifiedDate -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
-                $logmessage= "Le fichier ISO a été mis à jour et téléchargé : $isoFile"
+                $logmessage= "The new iso file was downloaded : $isoFile"
             } else {
-                $logmessage= "Le fichier ISO est déjà à jour."
+                $logmessage= "The iso file is already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "Le fichier ISO n'existait pas localement et a été téléchargé : $isoFile"
+            $logmessage= "The ISO file did not exist locally and was downloaded : $isoFile"
         }
 
 
     } else {
-        $logmessage= "Aucun fichier ISO trouvé dans le répertoire."
+        $logmessage= "No ISO files found in the directory."
 }
 
 
@@ -83,21 +83,21 @@ elseif ($osType -eq "Kali Linux") {
             if ($remoteLastModifiedDate -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
-                $logmessage= "Le fichier ISO a été mis à jour et téléchargé : $isoFile"
+                $logmessage= "The new iso file was downloaded : $isoFile"
             } else {
-                $logmessage= "Le fichier ISO est déjà à jour."
+                $logmessage= "The iso file is already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "Le fichier ISO n'existait pas localement et a été téléchargé : $isoFile"
+            $logmessage= "The ISO file did not exist locally and was downloaded : $isoFile"
         }
 
 
     } else {
-        $logmessage= "Aucun fichier ISO trouvé dans le répertoire."
+        $logmessage= "No ISO files found in the directory."
 }
 
-} 
+}
 
 else {
     Write-Host "Invalid choice. Please select a valid option."
