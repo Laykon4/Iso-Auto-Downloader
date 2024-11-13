@@ -3,17 +3,7 @@ $stamp = (Get-Date).toString("yyyy-MM-dd -- HH.mm.ss")
 $logfilepath="F:\ScriptISO\report_$stamp.log"
 $logmessage= "###### DEBUT DU SCRIPT ######" 
 
-$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n Your choice "
-
-$osType = switch ($choice) {
-    "1" { "Debian" }
-    "2" { "Kali Linux" }
-    "3" { "Ubuntu" }
-    Default { "Unknown" }
-}
-
-if ($osType -eq "Debian") {
-
+function debian {
     $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
     $debianIsoPattern = "debian-[\d.]+-amd64-netinst\.iso"
     $debianLocalPath = "F:\ScriptISO\debian\"
@@ -37,26 +27,23 @@ if ($osType -eq "Debian") {
             if ($remoteLastModifiedDate -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
-                $logmessage= "The new iso file was downloaded : $isoFile"
+                $logmessage= "Debian : The new iso file was downloaded : $isoFile"
             } else {
-                $logmessage= "The iso file is already up to date."
+                $logmessage= "Debian : The iso file is already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "The ISO file did not exist locally and was downloaded : $isoFile"
+            $logmessage= "Debian : The ISO file did not exist locally and was downloaded : $isoFile"
         }
 
 
     } else {
-        $logmessage= "No ISO files found in the directory."
+        $logmessage= "Debian : No ISO files found in the directory."
+    }
+    $stamp + " : " + $logmessage >> $logfilepath
 }
 
-
-
-} 
-
-elseif ($osType -eq "Kali Linux") {
-
+function kaliLinux {
     [Int] $version = Read-Host "Choose a version for Kali Linux (1 for Netinst | 2 for Complete)"
     switch ($version) {
         1 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
@@ -84,26 +71,26 @@ elseif ($osType -eq "Kali Linux") {
             if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
-                $logmessage= "The new iso file was downloaded : $isoFile"
+                $logmessage= "Kali Linux : The new iso file was downloaded : $isoFile"
             } else {
-                $logmessage= "The iso file is already up to date."
+                $logmessage= "Kali Linux : The iso file is already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "The ISO file did not exist locally and was downloaded : $isoFile"
+            $logmessage= "Kali Linux : The ISO file did not exist locally and was downloaded : $isoFile"
         }
 
 
     } else {
-        $logmessage= "No ISO files found in the directory."
+        $logmessage= "Kali Linux : No ISO files found in the directory."
+    } 
+$stamp + " : " + $logmessage >> $logfilepath
 }
 
-}
-
-elseif ($osType -eq "Ubuntu") {
-
+function ubuntu {
     $ubuntuUrl = "https://releases.ubuntu.com/"
 
+    Write-Host "You selected Ubuntu. Proceeding with Ubuntu setup..."
     $response = Invoke-WebRequest -Uri $ubuntuUrl
     $pageContent = $response.Content
 
@@ -127,24 +114,37 @@ elseif ($osType -eq "Ubuntu") {
             if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
-                $logmessage= "The new iso file was downloaded : $latestIsoUrl"
+                $logmessage= "Ubuntu : The new iso file was downloaded : $latestIsoUrl"
             } else {
-                $logmessage= "The iso file is already up to date."
+                $logmessage= "Ubuntu : The iso file is already up to date."
             }
         } else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "The ISO file did not exist locally and was downloaded : $latestIsoUrl"
+            $logmessage= "Ubuntu : The ISO file did not exist locally and was downloaded : $latestIsoUrl"
         }
     } 
 
     else {
-        $logmessage= "No ISO files found in the directory."
-    }
+        $logmessage= "Ubuntu : No ISO files found in the directory."
+    } 
+$stamp + " : " + $logmessage >> $logfilepath  
 }
 
-else {
-    Write-Host "Invalid choice. Please select a valid option."
+function dlAll {
+    debian
+    kaliLinux
+    ubuntu   
+}
+
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 99 - Download all `n Your choice "
+
+$osType = switch ($choice) {
+    "1" { debian }
+    "2" { kaliLinux }
+    "3" { ubuntu }
+    "99" {dlAll}
+    Default { "Unknown" }
 }
 
 
-$stamp + " : " + $logmessage >> $logfilepath
+#$stamp + " : " + $logmessage >> $logfilepath
