@@ -1,12 +1,11 @@
 Clear-Host
-$stamp = (Get-Date).toString("yyyy-MM-dd -- HH.mm.ss")
-$logfilepath="F:\ScriptISO\report_$stamp.log"
-$logmessage= "###### DEBUT DU SCRIPT ######" 
 
 function debian {
     $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
     $debianIsoPattern = "debian-[\d.]+-amd64-netinst\.iso"
     $debianLocalPath = "F:\ScriptISO\debian\"
+    $sha256LocalPath = "F:\ScriptISO\debian\"
+    $sha256Url = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA256SUMS"
 
     Write-Host "You selected Debian. Proceeding with Debian setup..."
     $response = Invoke-WebRequest -Uri $debianUrl
@@ -26,21 +25,44 @@ function debian {
 
             if ($remoteLastModifiedDate -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+                Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+
+                $calcSha256 = (Get-FileHash -Path $latestIsoUrl -Algorithm SHA256).Hash
+                $expectedSha256 = Select-String -Path $sha256LocalPath -Pattern ([System.IO.Path]::GetFileName($latestIsoUrl)) | ForEach-Object { $_ -replace "\s.*", "" }
+                if ($calcSha256 -eq $expectedSha256) {
+                    Write-Host "The file is valid :" -NoNewline
+                    Write-Host " SHA-256 hash matches." -ForegroundColor Green
+                } else {
+                    Write-Host "The file is corrupted or modified :" -NoNewline
+                    Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+                }
             
-                $logmessage= "Debian : The new iso file was downloaded : $isoFile"
+                Write-Host "Debian : The new files were downloaded :" -NoNewline
+                Write-Host " $isoFile | $sha256url" -ForegroundColor Green
             } else {
-                $logmessage= "Debian : The iso file is already up to date."
+                Write-Host "Debian : The iso and sha256 file are already up to date."
             }
-        }else {
+        } 
+        else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "Debian : The ISO file did not exist locally and was downloaded : $isoFile"
+            Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+
+            Write-Host "Debian : The ISO and sha256 file did not exist locally and was downloaded :" -NoNewline
+            Write-Host " $isoFile | $sha256url" -ForegroundColor Green
+
+            if ($calcSha256 -eq $expectedSha256) {
+                Write-Host "The file is valid :" -NoNewline
+                Write-Host " SHA-256 hash matches." -ForegroundColor Green
+            } else {
+                Write-Host "The file is corrupted or modified :" -NoNewline
+                Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+            }
         }
 
 
     } else {
-        $logmessage= "Debian : No ISO files found in the directory."
+        Write-Host "Debian : No ISO files found in the directory." -ForegroundColor Red
     }
-    $stamp + " : " + $logmessage >> $logfilepath
 }
 
 function kaliLinux {
@@ -71,20 +93,19 @@ function kaliLinux {
             if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             
-                $logmessage= "Kali Linux : The new iso file was downloaded : $isoFile"
+                Write-Host "Kali Linux : The new iso file was downloaded : $isoFile"
             } else {
-                $logmessage= "Kali Linux : The iso file is already up to date."
+                Write-Host "Kali Linux : The iso file is already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "Kali Linux : The ISO file did not exist locally and was downloaded : $isoFile"
+            Write-Host "Kali Linux : The ISO file did not exist locally and was downloaded : $isoFile"
         }
 
 
     } else {
-        $logmessage= "Kali Linux : No ISO files found in the directory."
+        Write-Host "Kali Linux : No ISO files found in the directory."
     } 
-$stamp + " : " + $logmessage >> $logfilepath
 }
 
 function ubuntu {
@@ -98,9 +119,11 @@ function ubuntu {
     $isoFile = [regex]::Matches($pageContent, $ubuntuPattern) | ForEach-Object { $_.Value }
 
     $latestVersion = ($isoFile | Sort-Object -Descending)[0]
+    $sha256Url = "$ubuntuUrl$latestVersion/SHA256SUMS"
 
     $latestIsoUrl = "$ubuntuUrl$latestVersion/ubuntu-$latestVersion-desktop-amd64.iso"
     $ubuntuLocalPath = "F:\ScriptISO\ubuntu"
+    $sha256LocalPath = "F:\ScriptISO\ubuntu"
 
 
     if ($latestVersion) {
@@ -113,21 +136,48 @@ function ubuntu {
 
             if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+                Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+
+                $calcSha256 = (Get-FileHash -Path $latestIsoUrl -Algorithm SHA256).Hash
+                $expectedSha256 = Select-String -Path $sha256LocalPath -Pattern ([System.IO.Path]::GetFileName($ubuntuLocalPath)) | ForEach-Object { $_ -replace "\s.*", "" }
             
-                $logmessage= "Ubuntu : The new iso file was downloaded : $latestIsoUrl"
+                # Comparer les deux hachages
+                if ($calcSha256 -eq $expectedSha256) {
+                    Write-Host "The file is valid :" -NoNewline
+                    Write-Host " SHA-256 hash matches." -ForegroundColor Green
+                } else {
+                    Write-Host "The file is corrupted or modified :" -NoNewline
+                    Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+                }
+            
+                Write-Host "Ubuntu : The new files were downloaded :" -NoNewline
+                Write-Host " ubuntu-$latestVersion-desktop-amd64.iso | $sha256url" -ForegroundColor Green
             } else {
-                $logmessage= "Ubuntu : The iso file is already up to date."
+                Write-Host "Ubuntu : The iso and sha256 files ire already up to date."
             }
         } else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            $logmessage= "Ubuntu : The ISO file did not exist locally and was downloaded : $latestIsoUrl"
+            Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+        
+            # Comparer les deux hachages
+            if ($calcSha256 -eq $expectedSha256) {
+                Write-Host "The file is valid :" -NoNewline
+                Write-Host " SHA-256 hash matches." -ForegroundColor Green
+            } else {
+                Write-Host "The file is corrupted or modified :" -NoNewline
+                Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+            }
+
+            Write-Host "Ubuntu : The files did not exist locally and were downloaded :" -NoNewline
+            Write-Host " ubuntu-$latestVersion-desktop-amd64.iso | $sha256Url" -ForegroundColor Green
         }
+
     } 
 
+
     else {
-        $logmessage= "Ubuntu : No ISO files found in the directory."
+        Write-Host "Ubuntu : No ISO files found in the directory." -ForegroundColor Red
     } 
-$stamp + " : " + $logmessage >> $logfilepath  
 }
 
 function dlAll {
@@ -145,6 +195,3 @@ $osType = switch ($choice) {
     "99" {dlAll}
     Default { "Unknown" }
 }
-
-
-#$stamp + " : " + $logmessage >> $logfilepath
