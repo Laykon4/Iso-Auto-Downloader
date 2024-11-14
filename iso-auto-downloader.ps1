@@ -38,7 +38,7 @@ function debian {
                 }
             
                 Write-Host "Debian : The new files were downloaded :" -NoNewline
-                Write-Host " $isoFile | $sha256url" -ForegroundColor Green
+                Write-Host " $isoFile | SHA256SUMS" -ForegroundColor Green
             } else {
                 Write-Host "Debian : The iso and sha256 file are already up to date."
             }
@@ -48,7 +48,7 @@ function debian {
             Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
 
             Write-Host "Debian : The ISO and sha256 file did not exist locally and was downloaded :" -NoNewline
-            Write-Host " $isoFile | $sha256url" -ForegroundColor Green
+            Write-Host " $isoFile | SHA256SUMS" -ForegroundColor Green
 
             if ($calcSha256 -eq $expectedSha256) {
                 Write-Host "The file is valid :" -NoNewline
@@ -151,7 +151,7 @@ function ubuntu {
                 }
             
                 Write-Host "Ubuntu : The new files were downloaded :" -NoNewline
-                Write-Host " ubuntu-$latestVersion-desktop-amd64.iso | $sha256url" -ForegroundColor Green
+                Write-Host " ubuntu-$latestVersion-desktop-amd64.iso | SHA256SUMS" -ForegroundColor Green
             } else {
                 Write-Host "Ubuntu : The iso and sha256 files ire already up to date."
             }
@@ -169,7 +169,7 @@ function ubuntu {
             }
 
             Write-Host "Ubuntu : The files did not exist locally and were downloaded :" -NoNewline
-            Write-Host " ubuntu-$latestVersion-desktop-amd64.iso | $sha256Url" -ForegroundColor Green
+            Write-Host " ubuntu-$latestVersion-desktop-amd64.iso | SHA256SUMS" -ForegroundColor Green
         }
 
     } 
