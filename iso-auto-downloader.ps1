@@ -1,5 +1,12 @@
 Clear-Host
 
+#-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/
+# TODO                                                                                          /
+#Add both (netinst & complete) download for Kali                                                /
+#Create KaliDeb function and merge download and compare script to reduce code size              /
+#Create functions for all small redundant scripts                                               /
+#-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/
+
 function debian {
     $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
     $debianIsoPattern = "debian-[\d.]+-amd64-netinst\.iso"
@@ -74,6 +81,10 @@ function kaliLinux {
 
     $kaliUrl = "https://cdimage.kali.org/current/"
     $kaliLocalPath = "F:\ScriptISO\kali\"
+    $sha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS"
+    $signedSha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS.gpg"
+    $sha256LocalPath = "F:\ScriptISO\kali\"
+    $signedSha256Path = "F:\ScriptISO\kali\"
 
     Write-Host "You selected Kali Linux. Proceeding with Kali Linux setup..."
     $response = Invoke-WebRequest -Uri $kaliUrl
@@ -92,14 +103,41 @@ function kaliLinux {
 
             if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+                Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+                Invoke-WebRequest -Uri $signedSha256Url -OutFile $signedSha256Path
             
-                Write-Host "Kali Linux : The new iso file was downloaded : $isoFile"
+                Write-Host "Kali Linux : The new files were downloaded :" -NoNewline
+                Write-Host " $isoFile | SHA256SUMS" -ForegroundColor Green
+
+                $calcSha256 = (Get-FileHash -Path $latestIsoUrl -Algorithm SHA256).Hash
+                $expectedSha256 = Select-String -Path $sha256LocalPath -Pattern ([System.IO.Path]::GetFileName($latestIsoUrl)) | ForEach-Object { $_ -replace "\s.*", "" }
+                
+                if ($calcSha256 -eq $expectedSha256) {
+                    Write-Host "The file is valid :" -NoNewline
+                    Write-Host " SHA-256 hash matches." -ForegroundColor Green
+                } else {
+                    Write-Host "The file is corrupted or modified :" -NoNewline
+                    Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+                }
+
             } else {
                 Write-Host "Kali Linux : The iso file is already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
-            Write-Host "Kali Linux : The ISO file did not exist locally and was downloaded : $isoFile"
+            Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+            Invoke-WebRequest -Uri $signedSha256Url -OutFile $signedSha256Path
+
+            Write-Host "Kali Linux : The new files were downloaded :" -NoNewline
+            Write-Host " $isoFile | SHA256SUMS" -ForegroundColor Green
+            
+            if ($calcSha256 -eq $expectedSha256) {
+                Write-Host "The file is valid :" -NoNewline
+                Write-Host " SHA-256 hash matches." -ForegroundColor Green
+            } else {
+                Write-Host "The file is corrupted or modified :" -NoNewline
+                Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+            }
         }
 
 
