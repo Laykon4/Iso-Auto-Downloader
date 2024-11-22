@@ -2,16 +2,34 @@ Clear-Host
 
 #-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/
 # TODO                                                                                          /
-#Add both (netinst & complete) download for Kali                                                /
-#Create KaliDeb function and merge download and compare script to reduce code size              /
-#Create functions for all small redundant scripts                                               /
 #-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/
 
+$folderName = "IsoAD"
+$desktopPath = "$env:USERPROFILE\desktop\$folderName"
+
+if (Test-Path -Path $desktopPath) {
+    Write-Host "The folder '$folderName' already exists on the desktop." -ForegroundColor Yellow
+} else {
+    Write-Host "The folder '$folderName' does not exist. Creating it now..." -ForegroundColor Green
+    New-Item -ItemType Directory -Path $desktopPath
+    Write-Host "The folder '$folderName' has been created at: $folderPath" -ForegroundColor Cyan
+}
+
 function debian {
+    $distro = "Debian"
+
+    if (Test-Path -Path "$desktopPath\$distro") {
+        Write-Host "The folder '$distro' already exists on the IsoAD folder." -ForegroundColor Yellow
+    } else {
+        Write-Host "The folder '$distro' does not exist. Creating it now..." -ForegroundColor Green
+        New-Item -ItemType Directory -Path "$desktopPath\$distro" | Out-Null
+        Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
+    }
+
     $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
     $debianIsoPattern = "debian-[\d.]+-amd64-netinst\.iso"
-    $debianLocalPath = "F:\ScriptISO\debian\"
-    $sha256LocalPath = "F:\ScriptISO\debian\"
+    $debianLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
+    $sha256LocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
     $sha256Url = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA256SUMS"
 
     Write-Host "You selected Debian. Proceeding with Debian setup..."
@@ -78,13 +96,23 @@ function kaliLinux {
         1 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
         2 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-amd64\.iso"}
     }
+    
+    $distro = "Kali Linux"
+
+    if (Test-Path -Path "$desktopPath\$distro") {
+        Write-Host "The folder '$distro' already exists on the IsoAD folder." -ForegroundColor Yellow
+    } else {
+        Write-Host "The folder '$distro' does not exist. Creating it now..." -ForegroundColor Green
+        New-Item -ItemType Directory -Path "$desktopPath\$distro" | Out-Null
+        Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
+    }
 
     $kaliUrl = "https://cdimage.kali.org/current/"
-    $kaliLocalPath = "F:\ScriptISO\kali\"
+    $kaliLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
     $sha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS"
     $signedSha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS.gpg"
-    $sha256LocalPath = "F:\ScriptISO\kali\"
-    $signedSha256Path = "F:\ScriptISO\kali\"
+    $sha256LocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
+    $signedSha256Path = "$env:USERPROFILE\desktop\$folderName\$distro\"
 
     Write-Host "You selected Kali Linux. Proceeding with Kali Linux setup..."
     $response = Invoke-WebRequest -Uri $kaliUrl
@@ -147,6 +175,16 @@ function kaliLinux {
 }
 
 function ubuntu {
+    $distro = "Ubuntu"
+
+    if (Test-Path -Path "$desktopPath\$distro") {
+        Write-Host "The folder '$distro' already exists on the IsoAD folder." -ForegroundColor Yellow
+    } else {
+        Write-Host "The folder '$distro' does not exist. Creating it now..." -ForegroundColor Green
+        New-Item -ItemType Directory -Path "$desktopPath\$distro" | Out-Null
+        Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
+    }
+
     $ubuntuUrl = "https://releases.ubuntu.com/"
 
     Write-Host "You selected Ubuntu. Proceeding with Ubuntu setup..."
@@ -160,8 +198,8 @@ function ubuntu {
     $sha256Url = "$ubuntuUrl$latestVersion/SHA256SUMS"
 
     $latestIsoUrl = "$ubuntuUrl$latestVersion/ubuntu-$latestVersion-desktop-amd64.iso"
-    $ubuntuLocalPath = "F:\ScriptISO\ubuntu"
-    $sha256LocalPath = "F:\ScriptISO\ubuntu"
+    $ubuntuLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
+    $sha256LocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
 
 
     if ($latestVersion) {
@@ -221,9 +259,10 @@ function ubuntu {
 function dlAll {
     debian
     kaliLinux
-    ubuntu   
+    ubuntu
 }
 
+Get-ChildItem 
 $choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 99 - Download all `n Your choice "
 
 $osType = switch ($choice) {
@@ -233,3 +272,4 @@ $osType = switch ($choice) {
     "99" {dlAll}
     Default { "Unknown" }
 }
+
