@@ -1,6 +1,6 @@
 # ISO Auto-Downloader
 
-### Automate the Download of Latest ISO Files (Debian & Kali Linux only for now)
+### Automate the Download of Latest ISO Files (Debian, Ubuntu & Kali Linux only for now)
 
 ISO Auto-Downloader is a tool designed to automate the process of fetching the latest versions of ISO files from specified sources. The tool checks for new releases, compares with locally stored files, and downloads updates only when a new version is available. This is ideal for users who need the most recent ISO versions without manually checking for updates.
 
