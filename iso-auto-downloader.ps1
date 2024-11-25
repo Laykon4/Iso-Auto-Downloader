@@ -149,7 +149,7 @@ function kaliLinux {
                 }
 
             } else {
-                Write-Host "Kali Linux : The iso file is already up to date."
+                Write-Host "Kali Linux : The iso and sha256 filea are already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
