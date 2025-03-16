@@ -374,6 +374,8 @@ function dlAll {
     ubuntu
 }
 
+
+Get-ChildItem 
 Clear-Host
 Write-Host ("
  _____                   _____      _              _                  _                 __    
@@ -384,7 +386,6 @@ Write-Host ("
 (_____|___/ \___/|______|_____/    |____/ \__  |  |_______)_||_|\__  |_| \_)___/|_| |_|  |_|  
                                          (____/                (____/                         
 ") -ForegroundColor Cyan
-Get-ChildItem 
 $choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 4 - Arch Linux `n 99 - Download all `n Your choice "
 
 $osType = switch ($choice) {
