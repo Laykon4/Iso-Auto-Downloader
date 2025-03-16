@@ -104,8 +104,12 @@ function kaliLinux {
     # Choix de la version de Kali
     [Int] $version = Read-Host "Choose a version for Kali Linux (1 for Netinst | 2 for Complete)"
     switch ($version) {
-        1 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
-        2 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-amd64\.iso"}
+        1 { $kaliIsoPattern = "kali-linux-\d{4}\.\da-installer-netinst-amd64\.iso" }
+        2 { $kaliIsoPattern = "kali-linux-\d{4}\.\da-installer-amd64\.iso" }
+        default {
+            Write-Host "Invalid choice. Defaulting to complete version."
+            $kaliIsoPattern = "kali-linux-\d{4}\.\da-installer-amd64\.iso"
+        }
     }
     
     # Définir le nom de la distro
@@ -119,7 +123,7 @@ function kaliLinux {
         Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
     }
     # Définition des variables
-    $kaliUrl = "https://cdimage.kali.org/current/"
+    $kaliUrl = "https://cdimage.kali.org/kali-images/current/"  # Changed URL
     $kaliLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
     $sha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS"
     $signedSha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS.gpg"
@@ -167,7 +171,7 @@ function kaliLinux {
                 }
 
             } else {
-                Write-Host "Kali Linux : The iso and sha256 filea are already up to date."
+                Write-Host "Kali Linux : The iso and sha256 files are already up to date."
             }
         }else {
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
@@ -191,7 +195,6 @@ function kaliLinux {
         Write-Host "Kali Linux : No ISO files found in the directory."
     } 
 }
-
 function ubuntu {
     # (C'etait atroce)
     # Définir le nom de la distro
@@ -374,7 +377,6 @@ function dlAll {
     ubuntu
     archLinux
 }
-
 
 Get-ChildItem 
 Clear-Host
