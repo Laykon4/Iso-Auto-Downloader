@@ -372,6 +372,7 @@ function dlAll {
     debian
     kaliLinux
     ubuntu
+    archLinux
 }
 
 
