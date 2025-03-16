@@ -20,9 +20,10 @@ ISO Auto-Downloader is a tool designed to automate the process of fetching the l
 
 ### Installation
 
-1. Clone the repository to your local machine:
+1. Clone the repository to your local machine on your desktop:
 
     ```bash
+    cd c:\Users\YourName\Desktop
     git clone https://github.com/Laykon4/iso-auto-downloader.git
     cd iso-auto-downloader
     ```
@@ -34,7 +35,7 @@ ISO Auto-Downloader is a tool designed to automate the process of fetching the l
 1. Run the script directly in PowerShell:
 
     ```powershell
-    .\iso-auto-downloader.ps1
+    powershell .\iso-auto-downloader.ps1
     ```
 
 2. The script will:
