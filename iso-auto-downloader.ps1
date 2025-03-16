@@ -262,13 +262,99 @@ function dlAll {
     ubuntu
 }
 
+function archLinux {
+    $distro = "Arch Linux"
+
+    if (Test-Path -Path "$desktopPath\$distro") {
+        Write-Host "The folder '$distro' already exists on the IsoAD folder." -ForegroundColor Yellow
+    } else {
+        Write-Host "The folder '$distro' does not exist. Creating it now..." -ForegroundColor Green
+        New-Item -ItemType Directory -Path "$desktopPath\$distro" | Out-Null
+        Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
+    }
+
+    $archUrl = "https://geo.mirror.pkgbuild.com/iso/latest/"
+    $archIsoPattern = "archlinux-\d{4}\.\d{2}\.\d{2}-x86_64\.iso"
+    $archLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
+    $sha256Url = "https://geo.mirror.pkgbuild.com/iso/latest/sha256sums.txt"
+    $sha256LocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
+
+    Write-Host "You selected Arch Linux. Proceeding with Arch Linux setup..."
+    $response = Invoke-WebRequest -Uri $archUrl
+    $pageContent = $response.Content
+
+    $isoFile = [regex]::Match($pageContent, $archIsoPattern).Value
+
+    if ($isoFile) {
+        $latestIsoUrl = "$archUrl$isoFile"
+        $localPath = "$archLocalPath$isoFile"
+
+        if (Test-Path -Path $localPath) {
+            $localLastModified = (Get-Item -Path $localPath).LastWriteTime
+            $remoteLastModified = $response.Headers["Last-Modified"]
+
+            if ($remoteLastModified -gt $localLastModified) {
+                Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+                Invoke-WebRequest -Uri $sha256Url -OutFile "$sha256LocalPath\sha256sums.txt"
+            
+                # Correction de la vérification SHA-256
+                $calcSha256 = (Get-FileHash -Path $localPath -Algorithm SHA256).Hash.ToLower()
+                $expectedSha256 = Get-Content "$sha256LocalPath\sha256sums.txt" | 
+                    Where-Object { $_ -match "$isoFile$" } | 
+                    ForEach-Object { ($_ -split '\s+')[0] }
+            
+                if ($calcSha256 -eq $expectedSha256) {
+                    Write-Host "The file is valid :" -NoNewline
+                    Write-Host " SHA-256 hash matches." -ForegroundColor Green
+                } else {
+                    Write-Host "The file is corrupted or modified :" -NoNewline
+                    Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+                    Write-Host "Expected: $expectedSha256" -ForegroundColor Yellow
+                    Write-Host "Got: $calcSha256" -ForegroundColor Yellow
+                }
+
+                Write-Host "Arch Linux : The new files were downloaded :" -NoNewline
+                Write-Host " $isoFile | sha256sums.txt" -ForegroundColor Green
+            } else {
+                Write-Host "Arch Linux : The iso and sha256 files are already up to date."
+            }
+        } else {
+            # Appliquer la même correction pour le cas où le fichier n'existe pas
+            Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            Invoke-WebRequest -Uri $sha256Url -OutFile "$sha256LocalPath\sha256sums.txt"
+
+            $calcSha256 = (Get-FileHash -Path $localPath -Algorithm SHA256).Hash.ToLower()
+            $expectedSha256 = Get-Content "$sha256LocalPath\sha256sums.txt" | 
+                Where-Object { $_ -match "$isoFile$" } | 
+                ForEach-Object { ($_ -split '\s+')[0] }
+
+            if ($calcSha256 -eq $expectedSha256) {
+                Write-Host "The file is valid :" -NoNewline
+                Write-Host " SHA-256 hash matches." -ForegroundColor Green
+            } else {
+                Write-Host "The file is corrupted or modified :" -NoNewline
+                Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+                Write-Host "Expected: $expectedSha256" -ForegroundColor Yellow
+                Write-Host "Got: $calcSha256" -ForegroundColor Yellow
+            }
+
+            Write-Host "Arch Linux : The ISO and sha256 file did not exist locally and was downloaded :" -NoNewline
+            Write-Host " $isoFile | sha256sums.txt" -ForegroundColor Green
+        }
+    }
+    else {
+        Write-Host "Arch Linux : No ISO files found in the directory." -ForegroundColor Red
+    }
+}
+
 Get-ChildItem 
-$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 99 - Download all `n Your choice "
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 4 - Arch Linux `n 99 - Download all `n Your choice "
 
 $osType = switch ($choice) {
     "1" { debian }
     "2" { kaliLinux }
     "3" { ubuntu }
+    "4" { archLinux }
     "99" {dlAll}
     Default { "Unknown" }
 }
