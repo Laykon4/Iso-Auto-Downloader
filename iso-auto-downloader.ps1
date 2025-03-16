@@ -16,6 +16,7 @@ if (Test-Path -Path $desktopPath) {
 }
 
 function debian {
+    # Définir le nom de la distro
     $distro = "Debian"
 
     if (Test-Path -Path "$desktopPath\$distro") {
@@ -26,6 +27,7 @@ function debian {
         Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
     }
 
+    # Définition des variables
     $debianUrl = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
     $debianIsoPattern = "debian-[\d.]+-amd64-netinst\.iso"
     $debianLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
@@ -36,22 +38,29 @@ function debian {
     $response = Invoke-WebRequest -Uri $debianUrl
     $pageContent = $response.Content
 
+    # Récupérer le nom du fichier ISO via regex
     $isoFile = [regex]::Match($pageContent, $debianIsoPattern).Value
 
+    # Si le fichier ISO est trouvé
     if ($isoFile) {
         $latestIsoUrl = "$debianUrl$isoFile"
         $localPath = "$debianLocalPath$isoFile"
 
+        # Si le fichier ISO existe localement
         if (Test-Path -Path $localPath) {
             $localLastModified = (Get-Item -Path $localPath).LastWriteTime
 
+            # Récupérer la date de dernière modification du fichier distant
             $remoteLastModified = $response.Headers["Last-Modified"]
             $remoteLastModifiedDate = [DateTime]::ParseExact($remoteLastModified, "R", $null)
 
+            # Si le fichier distant est plus récent que le fichier local
             if ($remoteLastModifiedDate -gt $localLastModified) {
+                # Télécharger le fichier ISO et le fichier SHA256
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
                 Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
 
+                # Calculer le hachage du fichier téléchargé
                 $calcSha256 = (Get-FileHash -Path $latestIsoUrl -Algorithm SHA256).Hash
                 $expectedSha256 = Select-String -Path $sha256LocalPath -Pattern ([System.IO.Path]::GetFileName($latestIsoUrl)) | ForEach-Object { $_ -replace "\s.*", "" }
                 if ($calcSha256 -eq $expectedSha256) {
@@ -69,6 +78,7 @@ function debian {
             }
         } 
         else {
+            # Télécharger le fichier ISO et le fichier SHA256
             Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
             Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
 
@@ -91,12 +101,14 @@ function debian {
 }
 
 function kaliLinux {
+    # Choix de la version de Kali
     [Int] $version = Read-Host "Choose a version for Kali Linux (1 for Netinst | 2 for Complete)"
     switch ($version) {
         1 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-netinst-amd64\.iso"}
         2 {$kaliIsoPattern = "kali-linux-[\d.]+-installer-amd64\.iso"}
     }
     
+    # Définir le nom de la distro
     $distro = "Kali Linux"
 
     if (Test-Path -Path "$desktopPath\$distro") {
@@ -106,7 +118,7 @@ function kaliLinux {
         New-Item -ItemType Directory -Path "$desktopPath\$distro" | Out-Null
         Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
     }
-
+    # Définition des variables
     $kaliUrl = "https://cdimage.kali.org/current/"
     $kaliLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
     $sha256Url = "https://cdimage.kali.org/kali-images/current/SHA256SUMS"
@@ -118,17 +130,21 @@ function kaliLinux {
     $response = Invoke-WebRequest -Uri $kaliUrl
     $pageContent = $response.Content
 
+    # Récupérer le nom du fichier ISO via regex
     $isoFile = [regex]::Match($pageContent, $kaliIsoPattern).Value
 
+    # Si le fichier ISO est trouvé
     if ($isoFile) {
         $latestIsoUrl = "$kaliUrl$isoFile"
         $localPath = "$kaliLocalPath$isoFile"
-
+        # Si le fichier ISO existe localement
         if (Test-Path -Path $localPath) {
             $localLastModified = (Get-Item -Path $localPath).LastWriteTime
 
+            # Récupérer la date de dernière modification du fichier distant
             $remoteLastModified = $response.Headers["Last-Modified"]
 
+            # Si le fichier distant est plus récent que le fichier local
             if ($remoteLastModified -gt $localLastModified) {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
                 Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
@@ -137,9 +153,11 @@ function kaliLinux {
                 Write-Host "Kali Linux : The new files were downloaded :" -NoNewline
                 Write-Host " $isoFile | SHA256SUMS" -ForegroundColor Green
 
+                # Calculer le hachage du fichier téléchargé
                 $calcSha256 = (Get-FileHash -Path $latestIsoUrl -Algorithm SHA256).Hash
                 $expectedSha256 = Select-String -Path $sha256LocalPath -Pattern ([System.IO.Path]::GetFileName($latestIsoUrl)) | ForEach-Object { $_ -replace "\s.*", "" }
                 
+                # Comparer les deux hachages
                 if ($calcSha256 -eq $expectedSha256) {
                     Write-Host "The file is valid :" -NoNewline
                     Write-Host " SHA-256 hash matches." -ForegroundColor Green
@@ -175,8 +193,11 @@ function kaliLinux {
 }
 
 function ubuntu {
+    # (C'etait atroce)
+    # Définir le nom de la distro
     $distro = "Ubuntu"
 
+    # Vérifier si le dossier existe
     if (Test-Path -Path "$desktopPath\$distro") {
         Write-Host "The folder '$distro' already exists on the IsoAD folder." -ForegroundColor Yellow
     } else {
@@ -190,10 +211,11 @@ function ubuntu {
     Write-Host "You selected Ubuntu. Proceeding with Ubuntu setup..."
     $response = Invoke-WebRequest -Uri $ubuntuUrl
     $pageContent = $response.Content
-
+    # Récupérer le nom du fichier ISO via regex (UNE GALERE OLALA)
     $ubuntuPattern = "(?<=href=[""'])(\d{2}\.\d{2})(?=[""'/])"
     $isoFile = [regex]::Matches($pageContent, $ubuntuPattern) | ForEach-Object { $_.Value }
 
+    # Récupérer la dernière version
     $latestVersion = ($isoFile | Sort-Object -Descending)[0]
     $sha256Url = "$ubuntuUrl$latestVersion/SHA256SUMS"
 
@@ -201,7 +223,7 @@ function ubuntu {
     $ubuntuLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
     $sha256LocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
 
-
+    # Si le fichier ISO est trouvé
     if ($latestVersion) {
         $localPath = "$ubuntuLocalPath\ubuntu-$latestVersion-desktop-amd64.iso"
 
@@ -214,6 +236,7 @@ function ubuntu {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
                 Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
 
+                # Calculer le hachage du fichier téléchargé
                 $calcSha256 = (Get-FileHash -Path $latestIsoUrl -Algorithm SHA256).Hash
                 $expectedSha256 = Select-String -Path $sha256LocalPath -Pattern ([System.IO.Path]::GetFileName($ubuntuLocalPath)) | ForEach-Object { $_ -replace "\s.*", "" }
             
@@ -256,13 +279,8 @@ function ubuntu {
     } 
 }
 
-function dlAll {
-    debian
-    kaliLinux
-    ubuntu
-}
-
 function archLinux {
+    # Définir le nom de la distro
     $distro = "Arch Linux"
 
     if (Test-Path -Path "$desktopPath\$distro") {
@@ -273,6 +291,7 @@ function archLinux {
         Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
     }
 
+    # Définition des variables
     $archUrl = "https://geo.mirror.pkgbuild.com/iso/latest/"
     $archIsoPattern = "archlinux-\d{4}\.\d{2}\.\d{2}-x86_64\.iso"
     $archLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
@@ -283,8 +302,10 @@ function archLinux {
     $response = Invoke-WebRequest -Uri $archUrl
     $pageContent = $response.Content
 
+    # Récupérer le nom du fichier ISO via regex
     $isoFile = [regex]::Match($pageContent, $archIsoPattern).Value
 
+    # Si le fichier ISO est trouvé
     if ($isoFile) {
         $latestIsoUrl = "$archUrl$isoFile"
         $localPath = "$archLocalPath$isoFile"
@@ -297,7 +318,7 @@ function archLinux {
                 Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
                 Invoke-WebRequest -Uri $sha256Url -OutFile "$sha256LocalPath\sha256sums.txt"
             
-                # Correction de la vérification SHA-256
+                # Correction de la vérification SHA-256 (chiant de ouf)
                 $calcSha256 = (Get-FileHash -Path $localPath -Algorithm SHA256).Hash.ToLower()
                 $expectedSha256 = Get-Content "$sha256LocalPath\sha256sums.txt" | 
                     Where-Object { $_ -match "$isoFile$" } | 
@@ -345,6 +366,12 @@ function archLinux {
     else {
         Write-Host "Arch Linux : No ISO files found in the directory." -ForegroundColor Red
     }
+}
+
+function dlAll {
+    debian
+    kaliLinux
+    ubuntu
 }
 
 Get-ChildItem 
