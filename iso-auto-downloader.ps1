@@ -371,11 +371,126 @@ function archLinux {
     }
 }
 
+function linuxMint {
+    # Choix de l'édition de Linux Mint
+    [Int] $edition = Read-Host "Choose a Linux Mint edition (1 for Cinnamon | 2 for MATE | 3 for Xfce)"
+    switch ($edition) {
+        1 { 
+            $mintEdition = "cinnamon"
+            $mintIsoPattern = "linuxmint-\d{2}-cinnamon-64bit\.iso"
+        }
+        2 { 
+            $mintEdition = "mate"
+            $mintIsoPattern = "linuxmint-\d{2}-mate-64bit\.iso"
+        }
+        3 { 
+            $mintEdition = "xfce"
+            $mintIsoPattern = "linuxmint-\d{2}-xfce-64bit\.iso"
+        }
+        default {
+            Write-Host "Invalid choice. Defaulting to Cinnamon edition."
+            $mintEdition = "cinnamon"
+            $mintIsoPattern = "linuxmint-\d{2}-cinnamon-64bit\.iso"
+        }
+    }
+    
+    # Définir le nom de la distro
+    $distro = "Linux Mint"
+
+    if (Test-Path -Path "$desktopPath\$distro") {
+        Write-Host "The folder '$distro' already exists on the IsoAD folder." -ForegroundColor Yellow
+    } else {
+        Write-Host "The folder '$distro' does not exist. Creating it now..." -ForegroundColor Green
+        New-Item -ItemType Directory -Path "$desktopPath\$distro" | Out-Null
+        Write-Host "The folder '$distro' has been created at: $folderPath\$distro" -ForegroundColor Cyan
+    }
+
+    # Définition des variables
+    $mintUrl = "https://mirrors.edge.kernel.org/linuxmint/stable/"
+    $mintLocalPath = "$env:USERPROFILE\desktop\$folderName\$distro\"
+    
+    Write-Host "You selected Linux Mint $mintEdition. Proceeding with Linux Mint setup..."
+    $response = Invoke-WebRequest -Uri $mintUrl
+    $pageContent = $response.Content
+
+    # Récupérer la dernière version disponible
+    $versionPattern = "(?<=href=[""'])(\d{2})(?=[""'/])"
+    $versions = [regex]::Matches($pageContent, $versionPattern) | ForEach-Object { $_.Value }
+    $latestVersion = ($versions | Sort-Object -Descending)[0]
+
+    # Construire les URLs
+    $versionUrl = "${mintUrl}${latestVersion}/"
+    $response = Invoke-WebRequest -Uri $versionUrl
+    $pageContent = $response.Content
+
+    # Récupérer le nom du fichier ISO via regex
+    $isoFile = [regex]::Match($pageContent, $mintIsoPattern).Value
+    
+    if ($isoFile) {
+        $latestIsoUrl = "${versionUrl}${isoFile}"
+        $localPath = "$mintLocalPath$isoFile"
+        $sha256Url = "${versionUrl}sha256sum.txt"
+        $sha256LocalPath = "$mintLocalPath\sha256sum.txt"
+
+        if (Test-Path -Path $localPath) {
+            $localLastModified = (Get-Item -Path $localPath).LastWriteTime
+            $remoteLastModified = $response.Headers["Last-Modified"]
+
+            if ($remoteLastModified -gt $localLastModified) {
+                Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+                Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+
+                # Vérification SHA-256
+                $calcSha256 = (Get-FileHash -Path $localPath -Algorithm SHA256).Hash.ToLower()
+                $expectedSha256 = Get-Content $sha256LocalPath | 
+                    Where-Object { $_ -match "$isoFile$" } | 
+                    ForEach-Object { ($_ -split '\s+')[0] }
+
+                if ($calcSha256 -eq $expectedSha256) {
+                    Write-Host "The file is valid :" -NoNewline
+                    Write-Host " SHA-256 hash matches." -ForegroundColor Green
+                } else {
+                    Write-Host "The file is corrupted or modified :" -NoNewline
+                    Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+                }
+
+                Write-Host "Linux Mint : The new files were downloaded :" -NoNewline
+                Write-Host " $isoFile | sha256sum.txt" -ForegroundColor Green
+            } else {
+                Write-Host "Linux Mint : The iso and sha256 files are already up to date."
+            }
+        } else {
+            Invoke-WebRequest -Uri $latestIsoUrl -OutFile $localPath
+            Invoke-WebRequest -Uri $sha256Url -OutFile $sha256LocalPath
+
+            # Vérification SHA-256 pour nouveau téléchargement
+            $calcSha256 = (Get-FileHash -Path $localPath -Algorithm SHA256).Hash.ToLower()
+            $expectedSha256 = Get-Content $sha256LocalPath | 
+                Where-Object { $_ -match "$isoFile$" } | 
+                ForEach-Object { ($_ -split '\s+')[0] }
+
+            if ($calcSha256 -eq $expectedSha256) {
+                Write-Host "The file is valid :" -NoNewline
+                Write-Host " SHA-256 hash matches." -ForegroundColor Green
+            } else {
+                Write-Host "The file is corrupted or modified :" -NoNewline
+                Write-Host " SHA-256 hash does not match." -ForegroundColor Red
+            }
+
+            Write-Host "Linux Mint : The ISO and sha256 file did not exist locally and was downloaded :" -NoNewline
+            Write-Host " $isoFile | sha256sum.txt" -ForegroundColor Green
+        }
+    } else {
+        Write-Host "Linux Mint : No ISO files found in the directory." -ForegroundColor Red
+    }
+}
+
 function dlAll {
     debian
     kaliLinux
     ubuntu
     archLinux
+    linuxMint
 }
 
 Get-ChildItem 
@@ -389,13 +504,14 @@ Write-Host ("
 (_____|___/ \___/|______|_____/    |____/ \__  |  |_______)_||_|\__  |_| \_)___/|_| |_|  |_|  
                                          (____/                (____/                         
 ") -ForegroundColor Cyan
-$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 4 - Arch Linux `n 99 - Download all `n Your choice "
+$choice = Read-Host "Choose an OS type : `n 1 - Debian `n 2 - Kali Linux `n 3 - Ubuntu `n 4 - Arch Linux `n 5 - Linux Mint `n 99 - Download all `n Your choice "
 
 $osType = switch ($choice) {
     "1" { debian }
     "2" { kaliLinux }
     "3" { ubuntu }
     "4" { archLinux }
+    "5" { linuxMint }
     "99" {dlAll}
     Default { "Unknown" }
 }
